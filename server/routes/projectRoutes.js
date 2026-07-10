@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const validateProject = require("../middleware/validateProject");
 
 const {
     getProjects,
@@ -11,8 +12,9 @@ const {
 
 router.get("/", getProjects);
 router.get("/:id", getProjectById);
-router.post("/", createProject);
-router.put("/:id", updateProject);
-router.delete("/:id", deleteProject);
 
+router.post("/", validateProject, createProject);
+router.put("/:id", validateProject, updateProject);
+
+router.delete("/:id", deleteProject);
 module.exports = router;

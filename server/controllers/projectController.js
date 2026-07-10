@@ -41,43 +41,6 @@ const getProjectById = async (req, res) => {
 
 const createProject = async (req, res) => {
     const newProject = req.body;
-
-    if (!newProject.title) {
-        return res.status(400).json({
-            message: "Title is required"
-        });
-    }
-
-    if (!newProject.description) {
-        return res.status(400).json({
-            message: "Description is required"
-        });
-    }
-
-    if (!newProject.status) {
-        return res.status(400).json({
-            message: "Status is required"
-        });
-    }
-
-    if (!newProject.owner) {
-        return res.status(400).json({
-            message: "Owner is required"
-        });
-    }
-
-    if (newProject.progress === undefined) {
-        return res.status(400).json({
-            message: "Progress is required"
-        });
-    }
-
-    if (!newProject.technologies) {
-        return res.status(400).json({
-            message: "Technologies are required"
-        });
-    }
-
     try {
         const result = await pool.query(
             `INSERT INTO projects

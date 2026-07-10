@@ -2,7 +2,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const express = require("express");
 const app = express();
 app.use(express.json());
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Home route
 app.get("/", (req, res) => {
