@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-const getProjects = async (req, res) => {
+const getProjects = async (req, res , next) => {
     try {
         const userId = req.user.id;
 
@@ -10,14 +10,11 @@ const getProjects = async (req, res) => {
      );
         res.status(200).json(result.rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: "Server Error"
-        });
+    next(error);
     }
-};
+    }
 
-const getProjectById = async (req, res) => {
+const getProjectById = async (req, res, next) => {
     const { id } = req.params;
 
     try {
@@ -37,15 +34,11 @@ const getProjectById = async (req, res) => {
         res.status(200).json(result.rows[0]);
 
     } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-    }
+    next(error);
+}
 };
 
-const createProject = async (req, res) => {
+const createProject = async (req, res, next) => {
     const newProject = req.body;
     const userId = req.user.id;
 
@@ -72,14 +65,10 @@ const createProject = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-    }
+    next(error);
+}
 };
-const updateProject = async (req, res) => {
+const updateProject = async (req, res, next) => {
     const { id } = req.params;
     const updatedProject = req.body;
 
@@ -126,14 +115,10 @@ const updateProject = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-    }
+    next(error);
+}
 };
-const deleteProject = async (req, res) => {
+const deleteProject = async (req, res, next) => {
     const { id } = req.params;
 
     try {
@@ -160,12 +145,8 @@ const deleteProject = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
-    }
+    next(error);
+}
 };
 module.exports = {
     getProjects,
