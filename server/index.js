@@ -1,33 +1,47 @@
-const projectRoutes = require("./routes/projectRoutes");
-const errorHandler = require("./middleware/errorHandler");
+require("dotenv").config();
+if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not set");
+}
 const express = require("express");
-const app = express();
-app.use(express.json());
-const port = process.env.PORT || 3000;
-const authRoutes = require("./routes/authRoutes");
-app.use("/auth", authRoutes);
 const cors = require("cors");
-app.use(cors());
 const helmet = require("helmet");
-app.use(helmet());
 const rateLimit = require("express-rate-limit");
-const limiter = rateLimit({
+const morgan = require("morgan");
+
+const projectRoutes = require("./routes/projectRoutes");
+const authRoutes = require("./routes/authRoutes");
+const errorHandler = require("./middleware/errorHandler");
+
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+app.use(helmet());
+app.use(morgan("dev"));
+
+const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100
 });
-app.use(limiter);
-const morgan = require("morgan");
-app.use(morgan("dev"));
-// Home route
-app.get("/", (req, res) => {
-    res.json({
-        message: "Welcome to DevSphere API"
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10
+});
+
+app.use(apiLimiter);
+app.use("/auth", authLimiter, authRoutes);
+app.use("/projects", projectRoutes);
+app.use((req, res) => {
+    res.status(404).json({
+        message: "Route not found"
     });
 });
 
-// Project routes
-app.use("/projects", projectRoutes);
 app.use(errorHandler);
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

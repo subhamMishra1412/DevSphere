@@ -1,3 +1,9 @@
+const VALID_STATUSES = [
+    "Planning",
+    "Active",
+    "Completed"
+];
+
 const validateProject = (req, res, next) => {
     const {
         title,
@@ -26,6 +32,12 @@ const validateProject = (req, res, next) => {
         });
     }
 
+    if (!VALID_STATUSES.includes(status)) {
+        return res.status(400).json({
+            message: `Status must be one of: ${VALID_STATUSES.join(", ")}`
+        });
+    }
+
     if (!owner) {
         return res.status(400).json({
             message: "Owner is required"
@@ -38,11 +50,17 @@ const validateProject = (req, res, next) => {
         });
     }
 
+    if (progress < 0 || progress > 100) {
+        return res.status(400).json({
+            message: "Progress must be between 0 and 100"
+        });
+    }
+
     if (!Array.isArray(technologies) || technologies.length === 0) {
-    return res.status(400).json({
-        message: "At least one technology is required"
-    });
-}
+        return res.status(400).json({
+            message: "At least one technology is required"
+        });
+    }
 
     next();
 };

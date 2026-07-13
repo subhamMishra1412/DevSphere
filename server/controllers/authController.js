@@ -3,11 +3,18 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res, next) => {
-    const { name, email, password } = req.body;
+    const { name, password } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!name || !email || !password) {
         return res.status(400).json({
             message: "All fields are required"
+        });
+    }
+
+    if (password.length < 8) {
+        return res.status(400).json({
+            message: "Password must be at least 8 characters."
         });
     }
 
@@ -45,12 +52,13 @@ const register = async (req, res, next) => {
         });
 
     } catch (error) {
-    next(error);
+        next(error);
     }
-    }
+};
 
 const login = async (req, res, next) => {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !password) {
         return res.status(400).json({
@@ -71,36 +79,36 @@ const login = async (req, res, next) => {
             });
         }
 
-       const isMatch = await bcrypt.compare(
-    password,
-    user.rows[0].password
-   );
+        const isMatch = await bcrypt.compare(
+            password,
+            user.rows[0].password
+        );
 
-   if (!isMatch) {
-    return res.status(401).json({
-        message: "Invalid credentials"
-    });
-}
+        if (!isMatch) {
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
+        }
 
         const token = jwt.sign(
-    {
-        id: user.rows[0].id,
-        email: user.rows[0].email
-    },
-    process.env.JWT_SECRET,
-    {
-        expiresIn: "1h"
-    }
-);
+            {
+                id: user.rows[0].id,
+                email: user.rows[0].email
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "1h"
+            }
+        );
 
-res.status(200).json({
-    message: "Login successful",
-    token
-});
+        res.status(200).json({
+            message: "Login successful",
+            token
+        });
 
     } catch (error) {
-    next(error);
-}
+        next(error);
+    }
 };
 
 module.exports = {
