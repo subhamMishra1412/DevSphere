@@ -30,8 +30,8 @@ const authLimiter = rateLimit({
 });
 
 app.use(apiLimiter);
-app.use("/auth", authLimiter, authRoutes);
-app.use("/projects", projectRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/projects", projectRoutes);
 app.use((req, res) => {
     res.status(404).json({
         message: "Route not found"

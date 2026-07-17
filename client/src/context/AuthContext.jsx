@@ -1,44 +1,48 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
+import * as authService from "@/services/authService";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [token, setToken] = useState(
-        localStorage.getItem("token")
-    );
+  const [token, setToken] = useState(
+    localStorage.getItem("token")
+  );
 
-    const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
-    const login = (jwtToken) => {
-        localStorage.setItem("token", jwtToken);
-        setToken(jwtToken);
-    };
+  async function login(email, password) {
+    const data = await authService.login({
+      email,
+      password,
+    });
 
-    const logout = () => {
-        localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
-    };
+    localStorage.setItem("token", data.token);
+    setToken(data.token);
 
-    useEffect(() => {
-        // We'll load the logged-in user later
-    }, [token]);
+    return data;
+  }
 
-    return (
-        <AuthContext.Provider
-            value={{
-                token,
-                user,
-                login,
-                logout,
-                isAuthenticated: !!token
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
+  function logout() {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        login,
+        logout,
+        isAuthenticated: !!token,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
