@@ -234,11 +234,12 @@ export default function ProjectDetailsPage() {
                     Due Date
                   </h3>
                   <p className="mt-1 text-base font-bold text-white">
-                    {new Date(project.due_date).toLocaleDateString(undefined, {
+                    {new Intl.DateTimeFormat(undefined, {
+                      timeZone: "UTC",
                       year: "numeric",
                       month: "long",
                       day: "numeric",
-                    })}
+                    }).format(new Date(project.due_date))}
                     {overdue && (
                       <span className="ml-2 text-xs font-mono font-bold text-rose-400">
                         (Overdue)

@@ -20,7 +20,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const { config } = error;
+    const url = config?.url || "";
+    const isAuthRequest =
+      url.includes("/auth/login") ||
+      url.includes("/auth/change-password") ||
+      url.includes("/auth/changePassword");
+
+    if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem("token");
       window.location.href = "/login";
     }

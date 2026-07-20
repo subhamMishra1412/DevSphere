@@ -1,9 +1,19 @@
 export function isOverdue(project) {
-  return (
-    project.due_date &&
-    project.status !== "Completed" &&
-    new Date(project.due_date) < new Date()
-  );
+  if (!project?.due_date || project.status === "Completed") {
+    return false;
+  }
+
+  const match = project.due_date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return false;
+  }
+
+  const [, year, month, day] = match;
+  const dueDate = new Date(Number(year), Number(month) - 1, Number(day));
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  return dueDate < todayDate;
 }
 
 export const PROJECT_STATUSES = ["Planning", "Active", "Completed"];
