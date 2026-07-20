@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   FolderKanban,
   CheckCircle2,
@@ -16,30 +17,21 @@ import StatCard from "@/components/ui/StatCard";
 import SectionCard from "@/components/ui/SectionCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ProjectStatusChart from "@/components/dashboard/ProjectStatusChart";
+import { isOverdue, getStatusStyle } from "@/utils/projectHelpers";
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  async function loadProjects() {
-    setIsLoading(true);
-    try {
-      const data = await getProjects();
-      setProjects(data || []);
-    } catch (error) {
-      console.error("Failed to load dashboard projects:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const {
+    data: projects = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["projects"],
+    queryFn: getProjects,
+  });
 
   const completed = projects.filter((p) => p.status === "Completed").length;
-  const inProgress = projects.filter((p) => p.status === "In Progress").length;
-  const overdue = projects.filter((p) => p.status === "Overdue").length;
+  const active = projects.filter((p) => p.status === "Active").length;
+  const overdue = projects.filter(isOverdue).length;
 
   const stats = [
     {
@@ -57,8 +49,8 @@ export default function DashboardPage() {
       trend: projects.length > 0 ? `${((completed / projects.length) * 100).toFixed(0)}% completion` : "No data",
     },
     {
-      title: "In Progress",
-      value: inProgress,
+      title: "Active",
+      value: active,
       icon: Clock3,
       color: "from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20",
       trend: "Active sprints",
@@ -88,7 +80,12 @@ export default function DashboardPage() {
         }
       />
 
-      {/* KPI Stat Grid with Zero-Layout-Shift Skeleton State */}
+      {isError && (
+        <div className="my-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+          Couldn't load your projects. Check your connection and try refreshing.
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 my-6">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -114,9 +111,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Main Analytics & Activity Grid */}
       <div className="grid gap-6 xl:grid-cols-3">
-        {/* Left 2 Columns: Donut Chart & Analytics */}
         <div className="xl:col-span-2">
           {isLoading ? (
             <div className="h-[420px] rounded-2xl border border-white/5 bg-zinc-950/40 p-6 animate-pulse flex flex-col justify-between">
@@ -129,7 +124,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Right Column: Recent Activity Feed */}
         <SectionCard
           title="Recent Deployments"
           subtitle="Latest updates across your active sprints"
@@ -179,19 +173,16 @@ export default function DashboardPage() {
                       </p>
                     </div>
 
-                    <span
-                      className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border ${
-                        project.status === "Completed"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : project.status === "In Progress"
-                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                          : project.status === "Overdue"
-                          ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                          : "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {isOverdue(project) && (
+                        <span className="rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border bg-rose-500/10 text-rose-400 border-rose-500/20">
+                          Overdue
+                        </span>
+                      )}
+                      <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border ${getStatusStyle(project.status)}`}>
+                        {project.status}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 pt-1">

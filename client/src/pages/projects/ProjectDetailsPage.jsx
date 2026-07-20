@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getProjectById, deleteProject } from "@/services/projectService";
 import { toast } from "sonner";
-import { ArrowLeft, Edit3, Trash2, User, Activity, Layers, Sparkles, AlertTriangle, XCircle } from "lucide-react";
+import { ArrowLeft, Edit3, Trash2, User, Activity, Layers, Sparkles, AlertTriangle, CalendarClock } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { isOverdue, getStatusStyle } from "@/utils/projectHelpers";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams();
@@ -40,7 +41,9 @@ export default function ProjectDetailsPage() {
       navigate("/projects");
     } catch (error) {
       console.error("Deletion failed:", error);
-      toast.error("Failed to delete project.");
+      toast.error(
+        error.response?.data?.message || "Failed to delete project."
+      );
       setDeleting(false);
       setShowConfirmDelete(false);
     }
@@ -94,10 +97,11 @@ export default function ProjectDetailsPage() {
     );
   }
 
+  const overdue = isOverdue(project);
+
   return (
     <PageContainer>
       <div className="max-w-4xl mx-auto space-y-6 pb-16">
-        {/* Back Navigation */}
         <Link
           to="/projects"
           className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
@@ -106,24 +110,18 @@ export default function ProjectDetailsPage() {
           <span>Back to Projects Directory</span>
         </Link>
 
-        {/* Top Header Section */}
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-white/10 pb-6">
           <div className="space-y-2 min-w-0 flex-1 pr-4">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate">
                 {project.title}
               </h1>
-              <span
-                className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-bold font-mono border ${
-                  project.status === "Completed"
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : project.status === "In Progress"
-                    ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                    : project.status === "Overdue"
-                    ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                    : "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                }`}
-              >
+              {overdue && (
+                <span className="shrink-0 rounded-md px-2.5 py-1 text-xs font-bold font-mono border bg-rose-500/10 text-rose-400 border-rose-500/20">
+                  Overdue
+                </span>
+              )}
+              <span className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-bold font-mono border ${getStatusStyle(project.status)}`}>
                 {project.status}
               </span>
             </div>
@@ -132,7 +130,6 @@ export default function ProjectDetailsPage() {
             </p>
           </div>
 
-          {/* Top Actions */}
           <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
             <Link
               to={`/projects/${project.id}/edit`}
@@ -153,7 +150,6 @@ export default function ProjectDetailsPage() {
           </div>
         </header>
 
-        {/* Custom Inline Deletion Guard ("Danger Zone") */}
         {showConfirmDelete && (
           <div
             role="alert"
@@ -190,12 +186,9 @@ export default function ProjectDetailsPage() {
           </div>
         )}
 
-        {/* Main Details Glass Card */}
         <article className="relative rounded-2xl border border-white/10 bg-zinc-950/60 p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-8 before:absolute before:inset-0 before:rounded-2xl before:border-t before:border-white/15 before:pointer-events-none">
-          {/* Subtle Ambient Glow */}
           <div className="absolute top-10 right-10 h-40 w-40 rounded-full bg-purple-500/5 blur-3xl pointer-events-none" />
 
-          {/* Key Metrics Grid */}
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.02] p-4">
               <div className="rounded-lg bg-indigo-500/10 p-2.5 text-indigo-400 border border-indigo-500/20">
@@ -224,9 +217,39 @@ export default function ProjectDetailsPage() {
                 </p>
               </div>
             </div>
+
+            {project.due_date && (
+              <div className="flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.02] p-4 sm:col-span-2">
+                <div
+                  className={`rounded-lg p-2.5 border ${
+                    overdue
+                      ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                  }`}
+                >
+                  <CalendarClock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                    Due Date
+                  </h3>
+                  <p className="mt-1 text-base font-bold text-white">
+                    {new Date(project.due_date).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    {overdue && (
+                      <span className="ml-2 text-xs font-mono font-bold text-rose-400">
+                        (Overdue)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Progress Section */}
           <div className="space-y-2 pt-2 border-t border-white/5">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-zinc-400 font-semibold">Execution Pipeline</span>
@@ -237,7 +260,6 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          {/* Tech Stack Pills */}
           <div className="space-y-3 pt-4 border-t border-white/5">
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-zinc-400" />

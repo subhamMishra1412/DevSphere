@@ -11,8 +11,14 @@ const validateProject = (req, res, next) => {
         status,
         owner,
         progress,
-        technologies
+        technologies,
+        due_date
     } = req.body;
+    if (due_date && isNaN(Date.parse(due_date))) {
+    return res.status(400).json({
+        message: "Due date must be a valid date"
+    });
+}
 
     if (!title) {
         return res.status(400).json({

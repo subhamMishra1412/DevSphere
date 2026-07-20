@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, Plus, FolderKanban, Edit3, Eye, Sparkles, XCircle } from "lucide-react";
 import { getProjects } from "@/services/projectService";
+import { isOverdue, getStatusStyle, PROJECT_STATUSES } from "@/utils/projectHelpers";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -36,7 +37,8 @@ export default function ProjectsPage() {
         project.status.toLowerCase().includes(search.toLowerCase());
 
       const matchesStatus =
-        statusFilter === "All" || project.status === statusFilter;
+        statusFilter === "All" ||
+        (statusFilter === "Overdue" ? isOverdue(project) : project.status === statusFilter);
 
       return matchesSearch && matchesStatus;
     });
@@ -57,9 +59,7 @@ export default function ProjectsPage() {
         </Link>
       </PageHeader>
 
-      {/* Control Bar: Search & Status Filters */}
       <nav aria-label="Project filters" className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-2">
-        {/* Search Input */}
         <div className="relative w-full sm:max-w-xs">
           <Search
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none"
@@ -85,15 +85,8 @@ export default function ProjectsPage() {
           )}
         </div>
 
-        {/* Status Pills */}
         <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" role="group" aria-label="Filter by project status">
-          {[
-            "All",
-            "Active",
-            "In Progress",
-            "Completed",
-            "Overdue",
-          ].map((status) => (
+          {["All", ...PROJECT_STATUSES, "Overdue"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -110,7 +103,6 @@ export default function ProjectsPage() {
         </div>
       </nav>
 
-      {/* Projects Grid / Skeleton State */}
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-2" aria-busy="true" aria-label="Loading projects">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -161,11 +153,9 @@ export default function ProjectsPage() {
               key={project.id}
               className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-zinc-950/60 p-5 backdrop-blur-xl shadow-lg transition-all duration-300 hover:border-white/20 hover:bg-zinc-900/40 hover:shadow-xl hover:-translate-y-0.5 before:absolute before:inset-0 before:rounded-2xl before:border-t before:border-white/15 before:pointer-events-none"
             >
-              {/* Ambient radial glow on card hover */}
               <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-indigo-500/5 blur-2xl group-hover:bg-indigo-500/10 transition-all duration-500 pointer-events-none" />
 
               <div>
-                {/* Card Header & Status Badge */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="min-w-0 flex-1">
                     <h2 className="truncate text-base font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">
@@ -176,29 +166,24 @@ export default function ProjectsPage() {
                     </p>
                   </div>
 
-                  <span
-                    className={`shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border ${
-                      project.status === "Completed"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : project.status === "In Progress"
-                        ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                        : project.status === "Overdue"
-                        ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                        : "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                    }`}
-                  >
-                    {project.status}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {isOverdue(project) && (
+                      <span className="rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border bg-rose-500/10 text-rose-400 border-rose-500/20">
+                        Overdue
+                      </span>
+                    )}
+                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold font-mono border ${getStatusStyle(project.status)}`}>
+                      {project.status}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Description */}
                 <p className="line-clamp-2 text-xs text-zinc-400 leading-relaxed min-h-[2.25rem]">
                   {project.description || "No description provided for this engineering sprint."}
                 </p>
               </div>
 
               <div className="mt-6 space-y-4 pt-4 border-t border-white/5">
-                {/* Progress Bar & Value */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-[11px] font-mono">
                     <span className="text-zinc-500">Sprint Velocity</span>
@@ -207,7 +192,6 @@ export default function ProjectsPage() {
                   <ProgressBar value={project.progress} />
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex items-center gap-2 pt-1">
                   <Link
                     to={`/projects/${project.id}`}

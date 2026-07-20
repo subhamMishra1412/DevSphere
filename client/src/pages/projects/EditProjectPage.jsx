@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Save, Sparkles } from "lucide-react";
 import PageContainer from "@/components/ui/PageContainer";
 import PageHeader from "@/components/ui/PageHeader";
+import { PROJECT_STATUSES } from "@/utils/projectHelpers";
 
 export default function EditProjectPage() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function EditProjectPage() {
     status: "Active",
     progress: 0,
     technologies: "",
+    due_date: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,7 @@ export default function EditProjectPage() {
           status: project.status || "Active",
           progress: project.progress || 0,
           technologies: project.technologies ? project.technologies.join(", ") : "",
+          due_date: project.due_date ? project.due_date.slice(0, 10) : "",
         });
       }
     } catch (error) {
@@ -68,13 +71,16 @@ export default function EditProjectPage() {
           .split(",")
           .map((tech) => tech.trim())
           .filter(Boolean),
+        due_date: form.due_date || null,
       });
 
       toast.success("Project updated successfully!");
       navigate(`/projects/${id}`);
     } catch (error) {
       console.error("Update failed:", error);
-      toast.error("Failed to update project.");
+      toast.error(
+        error.response?.data?.message || "Failed to update project."
+      );
     } finally {
       setSaving(false);
     }
@@ -111,7 +117,6 @@ export default function EditProjectPage() {
   return (
     <PageContainer>
       <div className="max-w-3xl mx-auto space-y-6 pb-12">
-        {/* Back Navigation */}
         <Link
           to={`/projects/${id}`}
           className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
@@ -125,15 +130,12 @@ export default function EditProjectPage() {
           subtitle={`Modifying configurations and sprint metrics for "${form.title || "Project"}".`}
         />
 
-        {/* Main Glass Form */}
         <form
           onSubmit={handleSubmit}
           className="relative rounded-2xl border border-white/10 bg-zinc-950/60 p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6 before:absolute before:inset-0 before:rounded-2xl before:border-t before:border-white/15 before:pointer-events-none"
         >
-          {/* Subtle Ambient Lighting */}
           <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 
-          {/* Title */}
           <div className="space-y-1.5">
             <label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
               Project Title
@@ -149,7 +151,6 @@ export default function EditProjectPage() {
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-1.5">
             <label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
               Description
@@ -166,7 +167,6 @@ export default function EditProjectPage() {
             />
           </div>
 
-          {/* Owner & Status Grid */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label htmlFor="owner" className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
@@ -195,38 +195,54 @@ export default function EditProjectPage() {
                 disabled={saving}
                 className="w-full rounded-xl border border-white/10 bg-zinc-950 px-3.5 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 cursor-pointer"
               >
-                <option value="Active">Active</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="Overdue">Overdue</option>
+                {PROJECT_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          {/* Progress Slider */}
-          <div className="space-y-2 pt-2 border-t border-white/5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="progress" className="text-xs font-bold uppercase tracking-wider text-zinc-300">
-                Sprint Velocity (Progress)
-              </label>
-              <span className="rounded-md bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 text-xs font-mono font-bold text-indigo-400">
-                {form.progress}%
-              </span>
+          <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-white/5">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="progress" className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                  Sprint Velocity (Progress)
+                </label>
+                <span className="rounded-md bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 text-xs font-mono font-bold text-indigo-400">
+                  {form.progress}%
+                </span>
+              </div>
+              <input
+                id="progress"
+                type="range"
+                name="progress"
+                min="0"
+                max="100"
+                value={form.progress}
+                onChange={handleChange}
+                disabled={saving}
+                className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
+              />
             </div>
-            <input
-              id="progress"
-              type="range"
-              name="progress"
-              min="0"
-              max="100"
-              value={form.progress}
-              onChange={handleChange}
-              disabled={saving}
-              className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none"
-            />
+
+            <div className="space-y-1.5">
+              <label htmlFor="due_date" className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
+                Due Date
+              </label>
+              <input
+                id="due_date"
+                type="date"
+                name="due_date"
+                value={form.due_date}
+                onChange={handleChange}
+                disabled={saving}
+                className="w-full rounded-xl border border-white/10 bg-zinc-950/80 px-3.5 py-2.5 text-sm text-white focus:border-indigo-500 focus:bg-black focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner disabled:opacity-50 [color-scheme:dark]"
+              />
+            </div>
           </div>
 
-          {/* Technologies */}
           <div className="space-y-2 pt-2 border-t border-white/5">
             <label htmlFor="technologies" className="text-xs font-bold uppercase tracking-wider text-zinc-300 block">
               Tech Stack & Dependencies
@@ -244,7 +260,6 @@ export default function EditProjectPage() {
               Separate each technology using commas.
             </p>
 
-            {/* Live Tech Pill Preview */}
             {previewTechs.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-2" aria-label="Tech stack preview">
                 {previewTechs.map((tech, i) => (
@@ -260,7 +275,6 @@ export default function EditProjectPage() {
             )}
           </div>
 
-          {/* Form Actions */}
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-white/10">
             <button
               type="submit"

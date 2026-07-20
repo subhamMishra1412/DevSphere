@@ -44,20 +44,21 @@ const createProject = async (req, res, next) => {
 
     try {
         const result = await pool.query(
-            `INSERT INTO projects
-            (title, description, status, owner, progress, technologies, user_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING *`,
-            [
-                newProject.title,
-                newProject.description,
-                newProject.status,
-                newProject.owner,
-                newProject.progress,
-                newProject.technologies,
-                userId
-            ]
-        );
+    `INSERT INTO projects
+    (title, description, status, owner, progress, technologies, user_id, due_date)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *`,
+    [
+        newProject.title,
+        newProject.description,
+        newProject.status,
+        newProject.owner,
+        newProject.progress,
+        newProject.technologies,
+        userId,
+        newProject.due_date || null
+    ]
+);
 
         res.status(201).json({
             message: "Project added successfully!",
@@ -87,28 +88,29 @@ const updateProject = async (req, res, next) => {
         }
 
         const result = await pool.query(
-            `UPDATE projects
-             SET
-                title = $1,
-                description = $2,
-                status = $3,
-                owner = $4,
-                progress = $5,
-                technologies = $6,
-                updated_at = CURRENT_TIMESTAMP
-             WHERE id = $7
-             RETURNING *`,
-            [
-                updatedProject.title,
-                updatedProject.description,
-                updatedProject.status,
-                updatedProject.owner,
-                updatedProject.progress,
-                updatedProject.technologies,
-                id
-            ]
-        );
-
+    `UPDATE projects
+     SET
+        title = $1,
+        description = $2,
+        status = $3,
+        owner = $4,
+        progress = $5,
+        technologies = $6,
+        due_date = $7,
+        updated_at = CURRENT_TIMESTAMP
+     WHERE id = $8
+     RETURNING *`,
+    [
+        updatedProject.title,
+        updatedProject.description,
+        updatedProject.status,
+        updatedProject.owner,
+        updatedProject.progress,
+        updatedProject.technologies,
+        updatedProject.due_date || null,
+        id
+    ]
+);
         res.status(200).json({
             message: "Project updated successfully!",
             project: result.rows[0]
