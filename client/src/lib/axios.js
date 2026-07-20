@@ -22,10 +22,11 @@ api.interceptors.response.use(
   (error) => {
     const { config } = error;
     const url = config?.url || "";
+    const pathname = new URL(url, window.location.origin).pathname;
     const isAuthRequest =
-      url.includes("/auth/login") ||
-      url.includes("/auth/change-password") ||
-      url.includes("/auth/changePassword");
+      pathname === "/auth/login" ||
+      pathname === "/auth/change-password" ||
+      pathname === "/auth/changePassword";
 
     if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem("token");

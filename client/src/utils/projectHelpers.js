@@ -10,6 +10,15 @@ export function isOverdue(project) {
 
   const [, year, month, day] = match;
   const dueDate = new Date(Number(year), Number(month) - 1, Number(day));
+  const isValidDate =
+    dueDate.getFullYear() === Number(year) &&
+    dueDate.getMonth() === Number(month) - 1 &&
+    dueDate.getDate() === Number(day);
+
+  if (!isValidDate) {
+    return false;
+  }
+
   const today = new Date();
   const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
