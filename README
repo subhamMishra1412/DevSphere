@@ -1,0 +1,15 @@
+DevSphere
+A full-stack project management platform built with:
+
+• React + Vite
+• Node.js + Express
+• PostgreSQL (Neon)
+• JWT Authentication
+• REST API
+• Render + Vercel Deployment
+
+Live Demo:
+https://dev-sphere-pearl.vercel.app/login
+
+GitHub:
+https://github.com/subhamMishra1412/DevSphere
